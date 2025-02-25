@@ -1,9 +1,18 @@
 name: "Build multiarch images"
 on: [workflow_dispatch]
 
+env:
+    OCI_REGISTRY: ghcr.io
+    DEST_REGISTRY: docker-dev-xdlcgithub.nce.dockerhub.rnd.amadeus.net
+    GITHUB_ORGANIZATION: amadeus-xdlc
+    GITHUB_REPOSITORY: genai.knowledge-db-cli
 
 jobs:
-  build:
+  build_and_push:
+    permissions:
+        contents: read
+        packages: write
+        id-token: write
     strategy:
       matrix:
         os: [ubuntu-24.04, ubuntu-24.04-arm]
@@ -11,27 +20,61 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-docker-action@v4.1.0
-      - name: Build image for ${{ matrix.os }}
-        run: |
-          docker build --tag myimage:${{ matrix.os }} .
-          docker images
-          docker run -i myimage:${{ matrix.os }} uname -a
-          docker image inspect myimage:${{ matrix.os }}
-  build-rootless:
-    strategy:
-      matrix:
-        os: [ubuntu-24.04, ubuntu-24.04-arm]
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-docker-action@v4.1.0
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
         with:
-          rootless: true
+            registry: ${{ env.OCI_REGISTRY }}
+            username: ${{ github.actor }}
+            password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build image for ${{ matrix.os }}
         run: |
-          docker build --tag myimage:${{ matrix.os }} .
+          docker build --tag ${{ env.OCI_REGISTRY }}/${{ env.GITHUB_ORGANIZATION }}/${{ env.GITHUB_REPOSITORY }}/testuvimage:${{ runner.arch }} .
           docker images
-          docker run -i myimage:${{ matrix.os }} uname -a
-          docker image inspect myimage:${{ matrix.os }}
+          docker run -i ${{ env.OCI_REGISTRY }}/${{ env.GITHUB_ORGANIZATION }}/${{ env.GITHUB_REPOSITORY }}/testuvimage:${{ runner.arch }} uname -a
+          docker image inspect ${{ env.OCI_REGISTRY }}/${{ env.GITHUB_ORGANIZATION }}/${{ env.GITHUB_REPOSITORY }}/testuvimage:${{ runner.arch }}
+          docker push ${{ env.OCI_REGISTRY }}/${{ env.GITHUB_ORGANIZATION }}/${{ env.GITHUB_REPOSITORY }}/testuvimage:${{ runner.arch }}
+  build_manifest_and_push:
+      permissions:
+        contents: read
+        packages: write
+        id-token: write
+      needs: [build_and_push]
+      runs-on: ubuntu-24.04
+      steps:
+      - uses: docker/setup-docker-action@v4.1.0
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+            registry: ${{ env.OCI_REGISTRY }}
+            username: ${{ github.actor }}
+            password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build manifest and push it
+        run: |
+          docker manifest create \
+          ${{ env.OCI_REGISTRY }}/${{ env.GITHUB_ORGANIZATION }}/${{ env.GITHUB_REPOSITORY }}/testuvimage:latest \
+          --amend ${{ env.OCI_REGISTRY }}/${{ env.GITHUB_ORGANIZATION }}/${{ env.GITHUB_REPOSITORY }}/testuvimage:X64 \
+          --amend ${{ env.OCI_REGISTRY }}/${{ env.GITHUB_ORGANIZATION }}/${{ env.GITHUB_REPOSITORY }}/testuvimage:ARM64
+          docker manifest push ${{ env.OCI_REGISTRY }}/${{ env.GITHUB_ORGANIZATION }}/${{ env.GITHUB_REPOSITORY }}/testuvimage:latest
+          docker manifest inspect ${{ env.OCI_REGISTRY }}/${{ env.GITHUB_ORGANIZATION }}/${{ env.GITHUB_REPOSITORY }}/testuvimage:latest
+          
+    
+    
+          
+  # build-rootless:
+  #   strategy:
+  #     matrix:
+  #       os: [ubuntu-24.04, ubuntu-24.04-arm]
+  #   runs-on: ${{ matrix.os }}
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: docker/setup-docker-action@v4.1.0
+  #       with:
+  #         rootless: true
+  #     - name: Build image for ${{ matrix.os }}
+  #       run: |
+  #         docker build --tag myimage:${{ matrix.os }} .
+  #         docker images
+  #         docker run -i myimage:${{ matrix.os }} uname -a
+  #         docker image inspect myimage:${{ matrix.os }}
     
       
