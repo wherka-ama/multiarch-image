@@ -3,9 +3,6 @@ on: [workflow_dispatch]
 
 env:
     OCI_REGISTRY: ghcr.io
-    GITHUB_ORGANIZATION: wherka-ama
-    GITHUB_REPOSITORY: multiarch-image
-
 jobs:
   build_and_push:
     permissions:
@@ -27,11 +24,11 @@ jobs:
             password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build image for ${{ matrix.os }}
         run: |
-          docker build --tag ${{ env.OCI_REGISTRY }}/${{ github.repository }}/testuvimage/testuvimage:${{ runner.arch }} .
+          docker build --tag ${{ env.OCI_REGISTRY }}/${{ github.repository }}/testuvimage:${{ runner.arch }} .
           docker images
-          docker run -i ${{ env.OCI_REGISTRY }}/${{ github.repository }}/testuvimage/testuvimage:${{ runner.arch }} uname -a
-          docker image inspect ${{ env.OCI_REGISTRY }}/${{ github.repository }}/testuvimage/testuvimage:${{ runner.arch }}
-          docker push ${{ env.OCI_REGISTRY }}/${{ github.repository }}/testuvimage/testuvimage:${{ runner.arch }}
+          docker run -i ${{ env.OCI_REGISTRY }}/${{ github.repository }}/testuvimage:${{ runner.arch }} uname -a
+          docker image inspect ${{ env.OCI_REGISTRY }}/${{ github.repository }}/testuvimage:${{ runner.arch }}
+          docker push ${{ env.OCI_REGISTRY }}/${{ github.repository }}/testuvimage:${{ runner.arch }}
   build_manifest_and_push:
       permissions:
         contents: read
@@ -50,7 +47,7 @@ jobs:
       - name: Build manifest and push it
         run: |
           docker manifest create \
-          ${{ env.OCI_REGISTRY }}/${{ github.repository }}/testuvimage/testuvimage:latest \
+          ${{ env.OCI_REGISTRY }}/${{ github.repository }}/testuvimage:latest \
           --amend ${{ env.OCI_REGISTRY }}/${{ github.repository }}/testuvimage:X64 \
           --amend ${{ env.OCI_REGISTRY }}/${{ github.repository }}/testuvimage:ARM64
           docker manifest push ${{ env.OCI_REGISTRY }}/${{ github.repository }}/testuvimage:latest
