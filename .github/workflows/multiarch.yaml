@@ -16,5 +16,5 @@ jobs:
           docker build --tag myimage:${{ matrix.os }} .
           docker images
           docker run -i myimage:${{ matrix.os }} uname -a
-          docker manifest inspect myimage:${{ matrix.os }}
+          docker image inspect myimage:${{ matrix.os }}
       
