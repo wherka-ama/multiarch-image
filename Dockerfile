@@ -1,5 +1,5 @@
 ARG SOURCE_IMAGE_NAME=ubi9/ubi
-FROM --platform=${TARGETPLATFORM} registry.access.redhat.com/${SOURCE_IMAGE_NAME}:latest AS base
+FROM registry.access.redhat.com/${SOURCE_IMAGE_NAME}:latest AS base
 
 ARG IMAGE_BASE_NAME=rhel
 ARG DNF=dnf
