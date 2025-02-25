@@ -3,9 +3,8 @@ on: [workflow_dispatch]
 
 env:
     OCI_REGISTRY: ghcr.io
-    DEST_REGISTRY: docker-dev-xdlcgithub.nce.dockerhub.rnd.amadeus.net
-    GITHUB_ORGANIZATION: amadeus-xdlc
-    GITHUB_REPOSITORY: genai.knowledge-db-cli
+    GITHUB_ORGANIZATION: wherka-ama
+    GITHUB_REPOSITORY: multiarch-image
 
 jobs:
   build_and_push:
@@ -28,11 +27,11 @@ jobs:
             password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build image for ${{ matrix.os }}
         run: |
-          docker build --tag ${{ env.OCI_REGISTRY }}/${{ env.GITHUB_ORGANIZATION }}/${{ env.GITHUB_REPOSITORY }}/testuvimage:${{ runner.arch }} .
+          docker build --tag ${{ env.OCI_REGISTRY }}/${{ github.repository }}/testuvimage/testuvimage:${{ runner.arch }} .
           docker images
-          docker run -i ${{ env.OCI_REGISTRY }}/${{ env.GITHUB_ORGANIZATION }}/${{ env.GITHUB_REPOSITORY }}/testuvimage:${{ runner.arch }} uname -a
-          docker image inspect ${{ env.OCI_REGISTRY }}/${{ env.GITHUB_ORGANIZATION }}/${{ env.GITHUB_REPOSITORY }}/testuvimage:${{ runner.arch }}
-          docker push ${{ env.OCI_REGISTRY }}/${{ env.GITHUB_ORGANIZATION }}/${{ env.GITHUB_REPOSITORY }}/testuvimage:${{ runner.arch }}
+          docker run -i ${{ env.OCI_REGISTRY }}/${{ github.repository }}/testuvimage/testuvimage:${{ runner.arch }} uname -a
+          docker image inspect ${{ env.OCI_REGISTRY }}/${{ github.repository }}/testuvimage/testuvimage:${{ runner.arch }}
+          docker push ${{ env.OCI_REGISTRY }}/${{ github.repository }}/testuvimage/testuvimage:${{ runner.arch }}
   build_manifest_and_push:
       permissions:
         contents: read
@@ -51,14 +50,11 @@ jobs:
       - name: Build manifest and push it
         run: |
           docker manifest create \
-          ${{ env.OCI_REGISTRY }}/${{ env.GITHUB_ORGANIZATION }}/${{ env.GITHUB_REPOSITORY }}/testuvimage:latest \
-          --amend ${{ env.OCI_REGISTRY }}/${{ env.GITHUB_ORGANIZATION }}/${{ env.GITHUB_REPOSITORY }}/testuvimage:X64 \
-          --amend ${{ env.OCI_REGISTRY }}/${{ env.GITHUB_ORGANIZATION }}/${{ env.GITHUB_REPOSITORY }}/testuvimage:ARM64
-          docker manifest push ${{ env.OCI_REGISTRY }}/${{ env.GITHUB_ORGANIZATION }}/${{ env.GITHUB_REPOSITORY }}/testuvimage:latest
-          docker manifest inspect ${{ env.OCI_REGISTRY }}/${{ env.GITHUB_ORGANIZATION }}/${{ env.GITHUB_REPOSITORY }}/testuvimage:latest
-          
-    
-    
+          ${{ env.OCI_REGISTRY }}/${{ github.repository }}/testuvimage/testuvimage:latest \
+          --amend ${{ env.OCI_REGISTRY }}/${{ github.repository }}/testuvimage:X64 \
+          --amend ${{ env.OCI_REGISTRY }}/${{ github.repository }}/testuvimage:ARM64
+          docker manifest push ${{ env.OCI_REGISTRY }}/${{ github.repository }}/testuvimage:latest
+          docker manifest inspect ${{ env.OCI_REGISTRY }}/${{ github.repository }}/testuvimage:latest
           
   # build-rootless:
   #   strategy:
